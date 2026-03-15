@@ -14,52 +14,43 @@
  * }
  */
 class Solution {
-    
-    // Class to store a node with its row and column
-    public static class NodeInfo {
-        TreeNode node;
+    class Node{
         int row;
         int col;
-        NodeInfo(TreeNode node, int row, int col){
-            this.node = node;
-            this.row = row;
-            this.col = col;
+        TreeNode node;
+
+        Node(int r, int c, TreeNode n){
+            this.row =r;
+            this.col =c;
+            this.node =n;
         }
     }
-    
     public List<List<Integer>> verticalTraversal(TreeNode root) {
-        // Map of column -> list of (row, value)
-        TreeMap<Integer, List<int[]>> map = new TreeMap<>();
-        Queue<NodeInfo> queue = new LinkedList<>();
-        
-        queue.offer(new NodeInfo(root, 0, 0));
-        
-        while(!queue.isEmpty()){
-            NodeInfo current = queue.poll();
-            TreeNode node = current.node;
-            int row = current.row;
-            int col = current.col;
-            
-            map.putIfAbsent(col, new ArrayList<>());
-            map.get(col).add(new int[]{row, node.val});
-            
-            if(node.left != null) queue.offer(new NodeInfo(node.left, row + 1, col - 1));
-            if(node.right != null) queue.offer(new NodeInfo(node.right, row + 1, col + 1));
-        }
-        
-        // Prepare the result
-        List<List<Integer>> result = new ArrayList<>();
-        
-        for(List<int[]> list : map.values()){
-            // Sort first by row, then by value if row is same
-            list.sort((a,b) -> a[0] == b[0] ? a[1] - b[1] : a[0] - b[0]);
-            List<Integer> colList = new ArrayList<>();
-            for(int[] pair : list){
-                colList.add(pair[1]);
+        PriorityQueue<Node> pq = new PriorityQueue<>((a,b)->{
+            if(a.col != b.col) return Integer.compare(a.col, b.col);
+            if(a.row != b.row) return Integer.compare(a.row, b.row);
+            return Integer.compare(a.node.val, b.node.val);
+        });
+
+        List<List<Integer>> ans = new ArrayList<>();
+        populatePQ(pq,root,0,0);
+
+        while(!pq.isEmpty()){
+            List<Integer> list = new ArrayList<>();
+            int currCol = pq.peek().col;
+            while(!pq.isEmpty() && pq.peek().col == currCol){
+                Node curr = pq.poll();
+                list.add(curr.node.val);
             }
-            result.add(colList);
+            ans.add(list);
         }
-        
-        return result;
+        return ans;
+    }
+
+    private void populatePQ(PriorityQueue<Node> pq, TreeNode node, int i, int j){
+        if(node == null) return;
+        pq.offer(new Node(i,j,node));
+        populatePQ(pq, node.left, i+1,j-1);
+        populatePQ(pq, node.right, i+1, j+1);
     }
 }
